@@ -14,11 +14,16 @@ app.use(
       secret: "fingerprint_customer",
       resave: true,
       saveUninitialized: true,
+      cookie: {
+         httpOnly: true,
+         secure: false,
+         maxAge: 24 * 60 * 60 * 1000, // 1 day
+      },
    })
 );
 
 app.use("/customer/auth/*", function auth(req, res, next) {
-   const token = req.headers.authorization;
+   const token = req.session.token;
 
    if (!token) {
       return res.status(401).json({ message: "No token provided." });

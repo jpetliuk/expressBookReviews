@@ -38,6 +38,8 @@ regd_users.post("/login", (req, res) => {
 
    const token = jwt.sign({ username: username }, "access");
 
+   req.session.token = token;
+
    return res
       .status(200)
       .json({ message: "User logged in successfully", token: token });
@@ -46,8 +48,8 @@ regd_users.post("/login", (req, res) => {
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
    const isbn = req.params.isbn;
-   const review = req.body.review;
    const username = req.user.username;
+   const review = req.body.review;
 
    if (!review) {
       return res.status(400).json({ message: "Review text is required" });
@@ -63,9 +65,28 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
 
    books[isbn].reviews[username] = review;
 
-   return res
-      .status(200)
-      .json({ message: "Review added/updated successfully" });
+   return res.status(200).json({ message: "Review added successfully" });
+});
+
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+   const isbn = req.params.isbn;
+   const username = req.user.username;
+
+   const book = books[isbn];
+
+   if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+   }
+
+   if (!book.reviews || !book.reviews[username]) {
+      return res
+         .status(404)
+         .json({ message: "Review not found for this user" });
+   }
+
+   delete book.reviews[username];
+
+   return res.status(200).json({ message: "Review deleted successfully" });
 });
 
 module.exports.authenticated = regd_users;
